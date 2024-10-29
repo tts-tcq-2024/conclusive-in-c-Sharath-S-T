@@ -3,22 +3,6 @@
 #include <vector>
 #include <string>
 
-struct MessageStore {
-  std::vector<std::string> messages;
-
-  void addMessage(const std::string& message) {
-    messages.push_back(message);
-  }
-
-  void clearMessages() {
-    messages.clear();
-  }
-
-  std::vector<std::string> getMessages() const {
-    return messages;
-  }
-};
-
 // Global instance of MessageStore
 MessageStore messageStore;
 
