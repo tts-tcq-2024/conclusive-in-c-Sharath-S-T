@@ -55,6 +55,8 @@ struct MessageStore {
   }
 };
 
+extern MessageStore messageStore;
+
 void checkAndAlert(
   AlertTarget alertTarget, BatteryCharacter batteryChar, double temperatureInC);
 
