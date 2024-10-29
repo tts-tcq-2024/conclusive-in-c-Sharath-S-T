@@ -1,12 +1,32 @@
 #include "typewise-alert.h"
-#include <stdio.h>
+#include <sstream>
+#include <vector>
+#include <string>
+
+struct MessageStore {
+  std::vector<std::string> messages;
+
+  void addMessage(const std::string& message) {
+    messages.push_back(message);
+  }
+
+  void clearMessages() {
+    messages.clear();
+  }
+
+  std::vector<std::string> getMessages() const {
+    return messages;
+  }
+};
+
+// Global instance of MessageStore
+MessageStore messageStore;
 
 BreachType inferBreach(double value, double lowerLimit, double upperLimit) {
   return (value < lowerLimit) ? TOO_LOW :
          (value > upperLimit) ? TOO_HIGH :
          NORMAL;
 }
-
 
 BreachType classifyTemperatureBreach(CoolingType coolingType, double temperatureInC) {
     int lowerLimit = coolingLimits[coolingType].lowerLimit;
@@ -18,26 +38,28 @@ BreachType classifyTemperatureBreach(CoolingType coolingType, double temperature
 void checkAndAlert(AlertTarget alertTarget, BatteryCharacter batteryChar, double temperatureInC) {
   BreachType breachType = classifyTemperatureBreach(batteryChar.coolingType, temperatureInC);
 
-  void (*alertFunc)(BreachType) = (alertTarget == TO_CONTROLLER) 
-                                  ? sendToController 
-                                  : sendToEmail;
-
-  alertFunc(breachType);
+  if(alertTarget == TO_CONTROLLER) {
+    sendToController(breachType);
+  } else {
+    sendToEmail(breachType);
+  }
 }
 
 void sendToController(BreachType breachType) {
   const unsigned short header = 0xfeed;
-  printf("%x : %x\n", header, breachType);
+  std::ostringstream message;
+  message << std::hex << header << " : " << breachType;
+  messageStore.addMessage(message.str());
 }
 
 void sendToEmail(BreachType breachType) {
   if (breachType == NORMAL) return;
 
   const char* recipient = "a.b@c.com";
-  const char* message = (breachType == TOO_LOW) 
-                        ? "Hi, the temperature is too low\n" 
-                        : "Hi, the temperature is too high\n";
-  
-  printf("To: %s\n", recipient);
-  printf("%s", message);
+  std::string message = (breachType == TOO_LOW) 
+                        ? "Hi, the temperature is too low" 
+                        : "Hi, the temperature is too high";
+
+  messageStore.addMessage("To: " + std::string(recipient));
+  messageStore.addMessage(message);
 }
